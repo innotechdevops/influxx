@@ -13,7 +13,7 @@ import (
 
 const minScale = "15m"
 
-type Param struct {
+type Params struct {
 	Start int64  `json:"start"`
 	End   int64  `json:"end"`
 	Scale string `json:"scale"`
@@ -54,7 +54,7 @@ func InOr(where string, list []string) string {
 	return strings.Join(whereConditions, " OR ")
 }
 
-func TimeRangeConvert(data Param) Query {
+func TimeRangeConvert(data Params) Query {
 	qConf := Query{}
 	qConf.Fill = setFill(data.Fill)
 	qConf.Fn = setFunction(data.Fn)
