@@ -27,7 +27,7 @@ type MinewSensor struct {
 
 ```go
 var values []influxdb1.Result
-dataStruct := TryParser[MinewSensor](values, func(element []MinewSensor) Struct {
+dataStruct := influxx.TryParser[MinewSensor](values, func(element []MinewSensor) Struct {
     return MinewSensor {
         Timestamp:   element[0],
         Temperature: element[1],
