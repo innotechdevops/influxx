@@ -23,7 +23,7 @@ type MinewSensor struct {
 }
 ```
 
-- Try parse value to struct
+- Try parse value to struct (Recommended)
 
 ```go
 var values []influxdb1.Result
