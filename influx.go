@@ -1,6 +1,7 @@
 package influxx
 
 import (
+	"errors"
 	"fmt"
 	"github.com/goccy/go-json"
 	influxdb1 "github.com/influxdata/influxdb1-client/v2"
@@ -227,6 +228,75 @@ func TryParser[T any](results []influxdb1.Result, onCompute func(element []any) 
 	return structs
 }
 
+func Convert[T any](data []T, onCompute func(timestamp time.Time, tags map[string]string, fields map[string]any)) error {
+	if len(data) == 0 {
+		return errors.New("data is empty")
+	}
+
+	for _, row := range data {
+
+		timestamp := int64(0)
+		tags := make(map[string]string)
+		fields := make(map[string]any)
+
+		t := reflect.TypeOf(row)
+		v := reflect.ValueOf(row)
+		for i := 0; i < t.NumField(); i++ {
+			field := t.Field(i)
+			value := v.Field(i)
+
+			if _, ok1 := field.Tag.Lookup("influxtime"); ok1 {
+				if value.Kind() == reflect.Ptr && value.IsNil() {
+					continue
+				}
+				// Safely check if the value is a int
+				if intValue, ok2 := value.Interface().(int); ok2 {
+					timestamp = int64(intValue)
+				} else if int32Value, ok3 := value.Interface().(int32); ok3 {
+					timestamp = int64(int32Value)
+				} else if int64Value, ok4 := value.Interface().(int64); ok4 {
+					timestamp = int64Value
+				}
+			}
+
+			if name, ok1 := field.Tag.Lookup("influxtag"); ok1 {
+				if value.Kind() == reflect.Ptr {
+					if value.IsNil() {
+						continue
+					}
+					value = reflect.Indirect(value)
+				}
+
+				// Safely check if the value is a string
+				if strValue, ok2 := value.Interface().(string); ok2 {
+					tags[name] = strValue
+				}
+			}
+
+			if name, ok := field.Tag.Lookup("influxfield"); ok {
+				if value.Kind() == reflect.Ptr && value.IsNil() {
+					continue
+				}
+				fields[name] = reflect.Indirect(value).Interface()
+			}
+		}
+
+		onCompute(time.Unix(timestamp, 0), tags, fields)
+	}
+
+	return nil
+}
+
+func NewPoint[T any](data []T, name string, batchPoint influxdb1.BatchPoints) error {
+	return Convert(data, func(timestamp time.Time, tags map[string]string, fields map[string]any) {
+		pt, err := influxdb1.NewPoint(name, tags, fields, timestamp)
+		if err != nil {
+			fmt.Println("Error:", err.Error())
+		}
+		batchPoint.AddPoint(pt)
+	})
+}
+
 func GetInt64(value any) int64 {
 	if value == nil {
 		return 0
@@ -269,4 +339,8 @@ func FloatDecimal(num float64, precision int) float64 {
 
 func Round(num float64) int {
 	return int(num + math.Copysign(0.5, num))
+}
+
+func AnyToPointer[T any](data T) *T {
+	return &data
 }
