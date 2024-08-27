@@ -66,3 +66,61 @@ values := [][]any{{"Timestamp", "Temperature", "Humidity", "Battery", "RSSI", "C
 values = append(values, response.Results[0].Series[0].Values...)
 sensors := influxx.Parser[MinewSensor](values)
 ```
+
+- Convert struct to influx pattern
+
+```go
+data := []MyStruct{
+    {
+        Timestamp: time.Now().Unix(),
+        ID:        "1",
+        Code:      "C01",
+        Field1:    influxx.AnyToPointer(9.9),
+        Field2:    influxx.AnyToPointer(10),
+        Field3:    nil,
+    },
+    {
+        Timestamp: time.Now().Unix(),
+        ID:        "2",
+        Code:      "C02",
+        Field1:    influxx.AnyToPointer(11.9),
+        Field2:    influxx.AnyToPointer(22),
+        Field3:    nil,
+    },
+}
+
+_ = influxx.Convert(data, func(timestamp time.Time, tags map[string]string, fields map[string]any) {
+    fmt.Println("timestamp:", timestamp)
+    fmt.Println("tags:", tags)
+    fmt.Println("fields:", fields)
+})
+```
+
+- New points by struct
+
+```go
+data := []MyStruct{
+    {
+        Timestamp: time.Now().Unix(),
+        ID:        "1",
+        Code:      "C01",
+        Field1:    influxx.AnyToPointer(9.9),
+        Field2:    influxx.AnyToPointer(10),
+        Field3:    nil,
+    },
+    {
+        Timestamp: time.Now().Unix(),
+        ID:        "2",
+        Code:      "C02",
+        Field1:    influxx.AnyToPointer(11.9),
+        Field2:    influxx.AnyToPointer(22),
+        Field3:    nil,
+    },
+}
+
+bp, _ := influxdb1.NewBatchPoints(influxdb1.BatchPointsConfig{
+    Database:  "my-database",
+    Precision: "s",
+})
+_ = influxx.NewPoint(data, "my_name", bp)
+```
