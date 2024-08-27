@@ -2,6 +2,7 @@ package influxx_test
 
 import (
 	"fmt"
+	influxdb1 "github.com/influxdata/influxdb1-client/v2"
 	"github.com/innotechdevops/influxx"
 	"testing"
 	"time"
@@ -41,4 +42,31 @@ func TestConvert(t *testing.T) {
 		fmt.Println("tags:", tags)
 		fmt.Println("fields:", fields)
 	})
+}
+
+func TestNewPoint(t *testing.T) {
+	data := []MyStruct{
+		{
+			Timestamp: time.Now().Unix(),
+			ID:        "1",
+			Code:      "C01",
+			Field1:    influxx.AnyToPointer(9.9),
+			Field2:    influxx.AnyToPointer(10),
+			Field3:    nil,
+		},
+		{
+			Timestamp: time.Now().Unix(),
+			ID:        "2",
+			Code:      "C02",
+			Field1:    influxx.AnyToPointer(11.9),
+			Field2:    influxx.AnyToPointer(22),
+			Field3:    nil,
+		},
+	}
+
+	bp, _ := influxdb1.NewBatchPoints(influxdb1.BatchPointsConfig{
+		Database:  "my-database",
+		Precision: "s",
+	})
+	_ = influxx.NewPoint(data, "my_name", bp)
 }
