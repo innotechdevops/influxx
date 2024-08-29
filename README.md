@@ -67,6 +67,21 @@ values = append(values, response.Results[0].Series[0].Values...)
 sensors := influxx.Parser[MinewSensor](values)
 ```
 
+- Try Mapping value null-safety
+
+```go
+tags := map[string]string{}
+fields := map[string]any{}
+
+influxx.TryMapping("tag1", "1", tags)
+influxx.TryMapping("tag2", "C001", tags)
+influxx.TryMapping("field1", influxx.AnyToPointer(99.99), fields)
+influxx.TryMapping("field2", 100, fields)
+
+fmt.Println(tags)   // map[tag1:1 tag2:C001]
+fmt.Println(fields) // map[field1:99.99 field2:100]
+```
+
 - Convert struct to influx pattern
 
 ```go

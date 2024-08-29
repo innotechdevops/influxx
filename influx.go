@@ -297,6 +297,18 @@ func NewPoint[T any](data []T, name string, batchPoint influxdb1.BatchPoints) er
 	})
 }
 
+func TryMapping[T any, V any](key string, value T, mapping map[string]V) {
+	v := reflect.ValueOf(value)
+
+	if v.Kind() == reflect.Ptr && !v.IsNil() {
+		v = v.Elem()
+	}
+
+	if vValue, ok := v.Interface().(V); ok {
+		mapping[key] = vValue
+	}
+}
+
 func GetInt64(value any) int64 {
 	if value == nil {
 		return 0
