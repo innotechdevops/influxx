@@ -297,14 +297,23 @@ func NewPoint[T any](data []T, name string, batchPoint influxdb1.BatchPoints) er
 	})
 }
 
-func TryMapping[T any, V any](key string, value T, mapping map[string]V) {
+func TryMapping[V any, M any](key string, value V, mapping map[string]M) {
 	v := reflect.ValueOf(value)
 
-	if v.Kind() == reflect.Ptr && !v.IsNil() {
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return
+		}
+
 		v = v.Elem()
 	}
 
-	if vValue, ok := v.Interface().(V); ok {
+	// Check if the value is a string and empty
+	if v.Kind() == reflect.String && v.String() == "" {
+		return
+	}
+
+	if vValue, ok := v.Interface().(M); ok {
 		mapping[key] = vValue
 	}
 }
