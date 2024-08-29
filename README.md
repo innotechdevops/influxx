@@ -5,7 +5,7 @@ Influx helper
 ## Install
 
 ```shell
-go get github.com/innotechdevops/influxx
+go get github.com/innotechdevops/influxx@v1.0.1
 ```
 
 ## How to use
