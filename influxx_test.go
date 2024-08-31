@@ -144,15 +144,37 @@ func BenchmarkTryMapping2(b *testing.B) {
 
 func BenchmarkTryMapping3(b *testing.B) {
 	for i := 0; i < b.N; i++ {
+		t := TryMapping{"1", "C001", "", influxx.AnyToPointer(99.99), influxx.AnyToPointer(100), nil}
+
 		tags := map[string]string{}
 		fields := map[string]any{}
 
-		influxx.TagMapping("tag1", "1", tags)
-		influxx.TagMapping("tag2", "C001", tags)
-		influxx.TagMapping("tag3", "", tags)
-		influxx.FieldMapping("field1", influxx.AnyToPointer(100), fields)
-		influxx.FieldMapping("field2", influxx.AnyToPointer(99.99), fields)
-		influxx.FieldMapping[*string]("field3", nil, fields)
+		influxx.TagMapping("tag1", t.tag1, tags)
+		influxx.TagMapping("tag2", t.tag2, tags)
+		influxx.TagMapping("tag3", t.tag3, tags)
+		influxx.FieldMapping("field1", t.field1, fields)
+		influxx.FieldMapping("field2", t.field2, fields)
+		influxx.FieldMapping("field3", t.field3, fields)
+
+		if len(tags) != 2 {
+			b.Error("Error tags is not 2 size")
+		}
+		if len(fields) != 2 {
+			b.Error("Error fields is not 2 size", fields)
+		}
+	}
+}
+
+func BenchmarkTryMapping4(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		t := TryMapping{"1", "C001", "", influxx.AnyToPointer(99.99), influxx.AnyToPointer(100), nil}
+
+		tags := map[string]string{"tag1": t.tag1, "tag2": t.tag2}
+		fields := map[string]any{}
+
+		influxx.FieldMapping("field1", t.field1, fields)
+		influxx.FieldMapping("field2", t.field2, fields)
+		influxx.FieldMapping("field3", t.field3, fields)
 
 		if len(tags) != 2 {
 			b.Error("Error tags is not 2 size")
