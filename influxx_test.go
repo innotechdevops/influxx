@@ -17,6 +17,15 @@ type MyStruct struct {
 	Field3    *int     `influxfield:"field3" json:"field3,omitempty"`
 }
 
+type TryMapping struct {
+	tag1   string
+	tag2   string
+	tag3   string
+	field1 *float64
+	field2 *int
+	field3 *int
+}
+
 func TestConvert(t *testing.T) {
 	data := []MyStruct{
 		{
@@ -84,4 +93,72 @@ func TestTryMapping(t *testing.T) {
 
 	fmt.Println(tags)   // map[tag1:1 tag2:C001]
 	fmt.Println(fields) // map[field1:99.99 field2:100]
+}
+
+func BenchmarkTryMapping1(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		tags := map[string]string{}
+		fields := map[string]any{}
+
+		influxx.TryMapping("tag1", "1", tags)
+		influxx.TryMapping("tag2", "C001", tags)
+		influxx.TryMapping("tag3", "", tags)
+		influxx.TryMapping("field1", influxx.AnyToPointer(99.99), fields)
+		influxx.TryMapping("field2", 100, fields)
+		influxx.TryMapping[*string, any]("field3", nil, fields)
+
+		if len(tags) != 2 {
+			b.Error("Error tags is not 2 size")
+		}
+		if len(fields) != 2 {
+			b.Error("Error fields is not 2 size", fields)
+		}
+	}
+}
+
+func BenchmarkTryMapping2(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		t := TryMapping{"1", "C001", "", influxx.AnyToPointer(99.99), influxx.AnyToPointer(100), nil}
+
+		tags := map[string]string{"tag1": t.tag1, "tag2": t.tag2}
+		fields := map[string]any{}
+
+		if t.field1 != nil {
+			fields["field1"] = *t.field1
+		}
+		if t.field2 != nil {
+			fields["field2"] = *t.field2
+		}
+		if t.field3 != nil {
+			fields["field3"] = *t.field3
+		}
+
+		if len(tags) != 2 {
+			b.Error("Error tags is not 2 size")
+		}
+		if len(fields) != 2 {
+			b.Error("Error fields is not 2 size")
+		}
+	}
+}
+
+func BenchmarkTryMapping3(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		tags := map[string]string{}
+		fields := map[string]any{}
+
+		influxx.TagMapping("tag1", "1", tags)
+		influxx.TagMapping("tag2", "C001", tags)
+		influxx.TagMapping("tag3", "", tags)
+		influxx.FieldMapping("field1", influxx.AnyToPointer(100), fields)
+		influxx.FieldMapping("field2", influxx.AnyToPointer(99.99), fields)
+		influxx.FieldMapping[*string]("field3", nil, fields)
+
+		if len(tags) != 2 {
+			b.Error("Error tags is not 2 size")
+		}
+		if len(fields) != 2 {
+			b.Error("Error fields is not 2 size", fields)
+		}
+	}
 }
