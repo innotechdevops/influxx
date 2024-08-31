@@ -12,7 +12,16 @@ import (
 	"time"
 )
 
-const minScale = "15m"
+const (
+	minScale     = "15m"
+	FnRaw        = "raw"
+	FnMean       = "mean"
+	FnLast       = "last"
+	FillPrevious = "previous"
+	FillLinear   = "linear"
+	FillNone     = "none"
+	FillZero     = "0"
+)
 
 type Params struct {
 	Start int64  `json:"start"`
