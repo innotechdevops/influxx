@@ -1,7 +1,9 @@
 package influxx_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/influxdata/influxdb1-client/models"
 	influxdb1 "github.com/influxdata/influxdb1-client/v2"
 	"github.com/innotechdevops/influxx"
 	"testing"
@@ -24,6 +26,15 @@ type TryMapping struct {
 	field1 *float64
 	field2 *int
 	field3 *int
+}
+
+type MinewSensor struct {
+	Timestamp   time.Time `influxdb:"Timestamp"`
+	Temperature float64   `influxdb:"Temperature"`
+	Humidity    float64   `influxdb:"Humidity"`
+	Battery     float64   `influxdb:"Battery"`
+	RSSI        float64   `influxdb:"RSSI"`
+	Code        string    `influxdb:"Code"`
 }
 
 func TestConvert(t *testing.T) {
@@ -95,28 +106,7 @@ func TestTryMapping(t *testing.T) {
 	fmt.Println(fields) // map[field1:99.99 field2:100]
 }
 
-func BenchmarkTryMapping1(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		tags := map[string]string{}
-		fields := map[string]any{}
-
-		influxx.TryMapping("tag1", "1", tags)
-		influxx.TryMapping("tag2", "C001", tags)
-		influxx.TryMapping("tag3", "", tags)
-		influxx.TryMapping("field1", influxx.AnyToPointer(99.99), fields)
-		influxx.TryMapping("field2", 100, fields)
-		influxx.TryMapping[*string, any]("field3", nil, fields)
-
-		if len(tags) != 2 {
-			b.Error("Error tags is not 2 size")
-		}
-		if len(fields) != 2 {
-			b.Error("Error fields is not 2 size", fields)
-		}
-	}
-}
-
-func BenchmarkTryMapping2(b *testing.B) {
+func Benchmark_ManualMapping(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		t := TryMapping{"1", "C001", "", influxx.AnyToPointer(99.99), influxx.AnyToPointer(100), nil}
 
@@ -142,7 +132,28 @@ func BenchmarkTryMapping2(b *testing.B) {
 	}
 }
 
-func BenchmarkTryMapping3(b *testing.B) {
+func Benchmark_TryMapping(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		tags := map[string]string{}
+		fields := map[string]any{}
+
+		influxx.TryMapping("tag1", "1", tags)
+		influxx.TryMapping("tag2", "C001", tags)
+		influxx.TryMapping("tag3", "", tags)
+		influxx.TryMapping("field1", influxx.AnyToPointer(99.99), fields)
+		influxx.TryMapping("field2", 100, fields)
+		influxx.TryMapping[*string, any]("field3", nil, fields)
+
+		if len(tags) != 2 {
+			b.Error("Error tags is not 2 size")
+		}
+		if len(fields) != 2 {
+			b.Error("Error fields is not 2 size", fields)
+		}
+	}
+}
+
+func Benchmark_TagAndFieldMapping(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		t := TryMapping{"1", "C001", "", influxx.AnyToPointer(99.99), influxx.AnyToPointer(100), nil}
 
@@ -165,7 +176,7 @@ func BenchmarkTryMapping3(b *testing.B) {
 	}
 }
 
-func BenchmarkTryMapping4(b *testing.B) {
+func Benchmark_FieldMapping(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		t := TryMapping{"1", "C001", "", influxx.AnyToPointer(99.99), influxx.AnyToPointer(100), nil}
 
@@ -181,6 +192,105 @@ func BenchmarkTryMapping4(b *testing.B) {
 		}
 		if len(fields) != 2 {
 			b.Error("Error fields is not 2 size", fields)
+		}
+	}
+}
+
+func Benchmark_ManualParser(b *testing.B) {
+	results := []influxdb1.Result{
+		{
+			Series: []models.Row{
+				{
+					Values: [][]any{
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+					},
+				},
+			},
+		},
+	}
+	for i := 0; i < b.N; i++ {
+		if len(results) > 0 {
+			if len(results[0].Series) > 0 {
+				data := []MinewSensor{}
+				for _, element := range results[0].Series[0].Values {
+					data = append(data, MinewSensor{
+						Timestamp:   influxx.GetTime(element[0]),
+						Temperature: influxx.GetFloat64(element[1]),
+						Humidity:    influxx.GetFloat64(element[2]),
+						Battery:     influxx.GetFloat64(element[3]),
+						RSSI:        influxx.GetFloat64(element[4]),
+						Code:        influxx.GetString(element[5]),
+					})
+				}
+
+				if len(data) != 5 {
+					b.Error("Error data is not 5", data)
+				}
+			}
+		}
+	}
+}
+
+func Benchmark_TryParser(b *testing.B) {
+	results := []influxdb1.Result{
+		{
+			Series: []models.Row{
+				{
+					Values: [][]any{
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+					},
+				},
+			},
+		},
+	}
+	for i := 0; i < b.N; i++ {
+		data := influxx.TryParser[MinewSensor](results, func(element []any) MinewSensor {
+			return MinewSensor{
+				Timestamp:   influxx.GetTime(element[0]),
+				Temperature: influxx.GetFloat64(element[1]),
+				Humidity:    influxx.GetFloat64(element[2]),
+				Battery:     influxx.GetFloat64(element[3]),
+				RSSI:        influxx.GetFloat64(element[4]),
+				Code:        influxx.GetString(element[5]),
+			}
+		})
+		if len(data) != 5 {
+			b.Error("Error data is not 5", data)
+		}
+	}
+}
+
+func Benchmark_Parser(b *testing.B) {
+	results := []influxdb1.Result{
+		{
+			Series: []models.Row{
+				{
+					Values: [][]any{
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+						{time.Now().Unix(), json.Number("1.1"), json.Number("2.2"), json.Number("3.3"), json.Number("4.4"), json.Number("CODE101")},
+					},
+				},
+			},
+		},
+	}
+	values := [][]any{{"Timestamp", "Temperature", "Humidity", "Battery", "RSSI", "Code"}}
+	values = append(values, results[0].Series[0].Values...)
+
+	for i := 0; i < b.N; i++ {
+		data := influxx.Parser[MinewSensor](values)
+		if len(data) != 5 {
+			b.Error("Error data is not 5", data)
 		}
 	}
 }

@@ -380,6 +380,13 @@ func GetTimeString(timestamp int64) string {
 	return time.Unix(timestamp, 0).String()
 }
 
+func GetTime(value any) time.Time {
+	if timestamp, ok := value.(int64); ok {
+		return time.Unix(timestamp, 0)
+	}
+	return time.Unix(0, 0)
+}
+
 func FloatDecimal(num float64, precision int) float64 {
 	output := math.Pow(10, float64(precision))
 	return float64(Round(num*output)) / output

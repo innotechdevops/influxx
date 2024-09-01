@@ -27,14 +27,14 @@ type MinewSensor struct {
 
 ```go
 var values []influxdb1.Result
-dataStruct := influxx.TryParser[MinewSensor](values, func(element []MinewSensor) Struct {
+dataStruct := influxx.TryParser[MinewSensor](values, func(element []any) MinewSensor {
     return MinewSensor {
-        Timestamp:   element[0],
-        Temperature: element[1],
-        Humidity:    element[2],
-        Battery:     element[3],
-        RSSI:        element[4],
-        Code:        element[5],
+        Timestamp:   time.Unix(influxx.GetInt64(element[0]), 0),
+        Temperature: influxx.GetFloat64(element[1]),
+        Humidity:    influxx.GetFloat64(element[2]),
+        Battery:     influxx.GetFloat64(element[3]),
+        RSSI:        influxx.GetFloat64(element[4]),
+        Code:        influxx.GetString(element[5]),
     }
 })
 ```
@@ -140,4 +140,28 @@ bp, _ := influxdb1.NewBatchPoints(influxdb1.BatchPointsConfig{
     Precision: "s",
 })
 _ = influxx.NewPoint(data, "my_name", bp)
+```
+
+## Benchmark
+
+```shell
+goos: darwin
+goarch: arm64
+pkg: github.com/innotechdevops/influxx
+cpu: Apple M1 Pro
+Benchmark_ManualMapping
+Benchmark_ManualMapping-10         	13121960	        78.55 ns/op
+Benchmark_TryMapping
+Benchmark_TryMapping-10            	 5757108	       204.1 ns/op
+Benchmark_TagAndFieldMapping
+Benchmark_TagAndFieldMapping-10    	 8432767	       141.7 ns/op
+Benchmark_FieldMapping
+Benchmark_FieldMapping-10          	 8439260	       141.5 ns/op
+Benchmark_ManualParser
+Benchmark_ManualParser-10          	 2062294	       580.3 ns/op
+Benchmark_TryParser
+Benchmark_TryParser-10             	 1949780	       609.9 ns/op
+Benchmark_Parser
+Benchmark_Parser-10                	   43351	     27374 ns/op
+PASS
 ```
