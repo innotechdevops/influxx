@@ -361,7 +361,9 @@ func GetString(value any) string {
 func GetTimeString(timestamp int64) string {
 	return time.Unix(timestamp, 0).String()
 }
-
+func GetTimeStringFormat(timestamp int64, format string) string {
+	return time.Unix(timestamp, 0).Format(format)
+}
 func FloatDecimal(num float64, precision int) float64 {
 	output := math.Pow(10, float64(precision))
 	return float64(Round(num*output)) / output
