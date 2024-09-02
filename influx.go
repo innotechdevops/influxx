@@ -327,6 +327,24 @@ func TryMapping[V any, M any](key string, value V, mapping map[string]M) {
 	}
 }
 
+func FieldMapping[T any](key string, value *T, mapping map[string]any) {
+	if value != nil {
+		mapping[key] = *value
+	}
+}
+
+func TagMapping(key string, value string, mapping map[string]string) {
+	if value != "" {
+		mapping[key] = value
+	}
+}
+
+func SafetyMapping[T any](value *T, onCompute func(value T)) {
+	if value != nil {
+		onCompute(*value)
+	}
+}
+
 func GetInt64(value any) int64 {
 	if value == nil {
 		return 0
@@ -361,6 +379,14 @@ func GetString(value any) string {
 func GetTimeString(timestamp int64) string {
 	return time.Unix(timestamp, 0).String()
 }
+
+func GetTime(value any) time.Time {
+	if timestamp, ok := value.(int64); ok {
+		return time.Unix(timestamp, 0)
+	}
+	return time.Unix(0, 0)
+}
+
 func GetTimeStringFormat(timestamp int64, format string) string {
 	return time.Unix(timestamp, 0).Format(format)
 }
