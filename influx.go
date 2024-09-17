@@ -106,7 +106,7 @@ func setFunction(data string) string {
 
 func setFill(data string) string {
 	if data == "" {
-		return "previous"
+		return "none"
 	} else {
 		return data
 	}
