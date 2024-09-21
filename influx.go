@@ -17,10 +17,12 @@ const (
 	FnRaw        = "raw"
 	FnMean       = "mean"
 	FnLast       = "last"
+	FnSum        = "sum"
 	FillPrevious = "previous"
 	FillLinear   = "linear"
 	FillNone     = "none"
 	FillZero     = "0"
+	FillNull     = "null"
 )
 
 type Params struct {
