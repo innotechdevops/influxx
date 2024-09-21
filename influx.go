@@ -17,6 +17,7 @@ const (
 	FnRaw        = "raw"
 	FnMean       = "mean"
 	FnLast       = "last"
+	FnFirst      = "first"
 	FnSum        = "sum"
 	FillPrevious = "previous"
 	FillLinear   = "linear"
@@ -101,6 +102,10 @@ func setFunction(data string) string {
 		return "mean"
 	case "last":
 		return "last"
+	case "first":
+		return "first"
+	case "sum":
+		return "sum"
 	default:
 		return "mean"
 	}
