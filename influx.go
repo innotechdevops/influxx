@@ -23,7 +23,6 @@ const (
 	FillNone     = "none"
 	FillZero     = "0"
 	FillNull     = "null"
-	//
 )
 
 type Params struct {
