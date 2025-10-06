@@ -3,13 +3,14 @@ package influxx
 import (
 	"errors"
 	"fmt"
-	"github.com/goccy/go-json"
-	influxdb1 "github.com/influxdata/influxdb1-client/v2"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/goccy/go-json"
+	influxdb1 "github.com/influxdata/influxdb1-client/v2"
 )
 
 const (
@@ -350,6 +351,34 @@ func SafetyMapping[T any](value *T, onCompute func(value T)) {
 	if value != nil {
 		onCompute(*value)
 	}
+}
+
+func GetInt64Ptr(value any) *int64 {
+	if value == nil {
+		return nil
+	}
+	return AnyToPointer(GetInt64(value))
+}
+
+func GetFloat64Ptr(value any, decimal ...int) *float64 {
+	if value == nil {
+		return nil
+	}
+	return AnyToPointer(GetFloat64(value))
+}
+
+func GetStringPtr(value any) *string {
+	if value == nil {
+		return nil
+	}
+	return AnyToPointer(GetString(value))
+}
+
+func GetTimePtr(value any) *time.Time {
+	if value == nil {
+		return nil
+	}
+	return AnyToPointer(GetTime(value))
 }
 
 func GetInt64(value any) int64 {
