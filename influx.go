@@ -442,6 +442,18 @@ func GetTime(value any) time.Time {
 func GetTimeStringFormat(timestamp int64, format string) string {
 	return time.Unix(timestamp, 0).Format(format)
 }
+func GetTimeStringFormatPtr(timestamp *int64, format string) *string {
+	if timestamp == nil {
+		return nil
+	}
+	return AnyToPointer(GetTimeStringFormat(*timestamp, format))
+}
+func FloatDecimalPtr(num *float64, precision int) *float64 {
+	if num == nil {
+		return nil
+	}
+	return AnyToPointer(FloatDecimal(*num, precision))
+}
 func FloatDecimal(num float64, precision int) float64 {
 	output := math.Pow(10, float64(precision))
 	return float64(Round(num*output)) / output
