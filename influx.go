@@ -353,11 +353,19 @@ func SafetyMapping[T any](value *T, onCompute func(value T)) {
 	}
 }
 
+func GetIntPtr(value any) *int {
+	return AnyToPointer(GetInt(value))
+}
+
 func GetInt64Ptr(value any) *int64 {
 	if value == nil {
 		return nil
 	}
 	return AnyToPointer(GetInt64(value))
+}
+
+func GetFloat32Ptr(value any, decimal ...int) *float32 {
+	return AnyToPointer(GetFloat32(value))
 }
 
 func GetFloat64Ptr(value any, decimal ...int) *float64 {
@@ -381,12 +389,20 @@ func GetTimePtr(value any) *time.Time {
 	return AnyToPointer(GetTime(value))
 }
 
+func GetInt(value any) int {
+	return int(GetInt64(value))
+}
+
 func GetInt64(value any) int64 {
 	if value == nil {
 		return 0
 	}
 	data, _ := value.(json.Number).Int64()
 	return data
+}
+
+func GetFloat32(value any, decimal ...int) float32 {
+	return float32(GetFloat64(value, decimal...))
 }
 
 func GetFloat64(value any, decimal ...int) float64 {
